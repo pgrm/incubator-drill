@@ -129,6 +129,16 @@ public class LocalSyncableFileSystem extends FileSystem {
     }
 
     @Override
+    public void hflush() throws IOException {
+      sync();
+    }
+
+    @Override
+    public void hsync() throws IOException {
+      sync();
+    }
+
+    @Override
     public void write(int b) throws IOException {
       output.write(b);
     }

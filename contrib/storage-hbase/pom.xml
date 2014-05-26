@@ -130,6 +130,12 @@
           <artifactId>hadoop-test</artifactId>
           <version>1.2.1</version>
           <scope>test</scope>
+          <exclusions>
+            <exclusion>
+              <artifactId>commons-logging</artifactId>
+              <groupId>commons-logging</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
