@@ -563,7 +563,10 @@
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
               </exclusion>
-
+              <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
               <exclusion>
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
@@ -614,6 +617,10 @@
               <exclusion>
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
               </exclusion>
               <exclusion>
                 <artifactId>mockito-all</artifactId>
