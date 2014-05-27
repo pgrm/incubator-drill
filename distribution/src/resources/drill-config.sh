@@ -81,7 +81,7 @@ fi
 # specifically excluded in $DRILL_HOME/bin/hadoop-excludes.txt
 if [ "${HADOOP_HOME}x" != "x" ] ; then
   HADOOP_CLASSPATH=""
-  for jar in `ls $HADOOP_HOME/lib/*jar` ; do
+  for jar in `ls $HADOOP_HOME/share/hadoop/*/lib/*jar` ; do
     echo $jar | grep -v -f $DRILL_HOME/bin/hadoop-excludes.txt >/dev/null
     if [ "$?" -eq "0" ] ; then
       HADOOP_CLASSPATH=$jar:$HADOOP_CLASSPATH
