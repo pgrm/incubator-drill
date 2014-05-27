@@ -692,6 +692,10 @@
             <version>2.2.0</version>
             <exclusions>
               <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
               </exclusion>
