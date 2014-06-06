@@ -102,9 +102,9 @@ public class RunDrill {
     final TwillController controller =
             twillRunner.prepare(new DrillbitRunnable(),
                     ResourceSpecification.Builder.with()
-                            .setVirtualCores(1)
-                            .setMemory(128, ResourceSpecification.SizeUnit.MEGA)
-                            .setInstances(5)
+                            .setVirtualCores(2)
+                            .setMemory(2048, ResourceSpecification.SizeUnit.MEGA)
+                            .setInstances(1)
                             .build())
                     .addLogHandler(new PrinterLogHandler(new PrintWriter(System.out, true)))
                     .start();
