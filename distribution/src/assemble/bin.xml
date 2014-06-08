@@ -49,6 +49,7 @@
         <include>org.apache.drill.contrib:storage-hive:jar</include>
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
         <include>org.apache.drill.contrib:drill-storage-hbase</include>
+        <include>org.apache.drill.yarn:drill-yarn-integration</include>
       </includes>
       
       

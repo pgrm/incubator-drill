@@ -1171,5 +1171,6 @@
     <module>contrib</module>
     <module>exec</module>
     <module>distribution</module>
+    <module>yarn-integration</module>
   </modules>
 </project>

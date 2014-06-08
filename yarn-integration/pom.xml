@@ -25,7 +25,8 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>yarn-integration</artifactId>
+  <groupId>org.apache.drill.yarn</groupId>
+  <artifactId>drill-yarn-integration</artifactId>
 
   <properties>
     <twill.version>0.3.0-incubating-SNAPSHOT</twill.version>
@@ -65,35 +66,4 @@
       <version>${project.parent.version}</version>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <artifactSet>
-                <excludes>
-                  <exclude>org.apache.hadoop:*</exclude>
-                </excludes>
-              </artifactSet>
-              <transformers>
-                <transformer
-                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>
