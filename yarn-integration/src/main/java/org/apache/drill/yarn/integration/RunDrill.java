@@ -24,16 +24,27 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.RootCreator;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.StartupOptions;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.twill.api.*;
+import org.apache.twill.api.ResourceSpecification;
+import org.apache.twill.api.TwillController;
+import org.apache.twill.api.TwillRunnerService;
 import org.apache.twill.api.logging.PrinterLogHandler;
 import org.apache.twill.common.Services;
 import org.apache.twill.yarn.YarnTwillRunnerService;
@@ -88,12 +99,21 @@ public class RunDrill {
 
   private void initializeAndStartTwillController() {
     controller = twillRunner.prepare(new DrillbitRunnable(), getResourceSpecifications())
-                    .withDependencies(getStorageConfigDependencies())
-                    .withDependencies(getStoragePluginDependencies())
-                    .withDependencies(getFormatPluginDependencies())
-                    .withDependencies(getDrillFunctionDependencies())
-                    .addLogHandler(new PrinterLogHandler(new PrintWriter(System.out, true)))
-                    .start();
+            .withDependencies(getStoragePluginDependencies())
+            .withDependencies(getStoragePluginConfigDependencies())
+            .withDependencies(getFormatPluginDependencies())
+            .withDependencies(getFormatPluginConfigDependencies())
+            .withDependencies(getDrillFunctionDependencies())
+            .withDependencies(getPhysicalOperatorDependencies())
+            .withDependencies(getPhysicalBatchCreatorDependencies())
+            .withDependencies(getPhysicalRootCreatorDependencies())
+            .withDependencies(getLogicalOperatorDependencies())
+            .withDependencies(
+                    SchemaChangeException.class,
+                    FragmentContext.class,
+                    RecordBatch.class)
+            .addLogHandler(new PrinterLogHandler(new PrintWriter(System.out, true)))
+            .start();
 
   }
 
@@ -105,18 +125,22 @@ public class RunDrill {
             .build();
   }
 
-  private Iterable<Class<?>> getStorageConfigDependencies() {
-    Set<Class<? extends StoragePluginConfig>> types;
-
-    types = PathScanner.scanForImplementations(StoragePluginConfig.class, Lists.newArrayList("org"));
-    return convertTypesToClass(types);
-  }
-
   private Iterable<Class<?>> getStoragePluginDependencies() {
     Set<Class<? extends StoragePlugin>> types;
 
     types = PathScanner.scanForImplementations(StoragePlugin.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
     return convertTypesToClass(types);
+  }
+
+  private Iterable<Class<?>> getStoragePluginConfigDependencies() {
+    List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
+    Set<Class<? extends StoragePluginConfig>> types1;
+    types1 = PathScanner.scanForImplementations(StoragePluginConfig.class, packages);
+
+    Set<Class<? extends StoragePluginConfig>> types2;
+    types2 = PathScanner.scanForImplementations(StoragePluginConfig.class, Lists.newArrayList("org"));
+
+    return convertTypesToClass(types1, types2);
   }
 
   private Iterable<Class<?>> getFormatPluginDependencies() {
@@ -126,11 +150,36 @@ public class RunDrill {
     return convertTypesToClass(types);
   }
 
+  private Class<?>[] getFormatPluginConfigDependencies() {
+    List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
+    return PathScanner.scanForImplementationsArr(FormatPluginConfig.class, packages);
+  }
+
   private Iterable<Class<?>> getDrillFunctionDependencies() {
     Set<Class<? extends DrillFunc>> types;
 
     types =  PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     return convertTypesToClass(types);
+  }
+
+  private Class<?>[] getPhysicalOperatorDependencies() {
+    List<String> packages = config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES);
+    return PathScanner.scanForImplementationsArr(PhysicalOperator.class, packages);
+  }
+
+  private Class<?>[] getPhysicalBatchCreatorDependencies() {
+    List<String> packages = config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES);
+    return PathScanner.scanForImplementationsArr(BatchCreator.class, packages);
+  }
+
+  private Class<?>[] getPhysicalRootCreatorDependencies() {
+    List<String> packages = config.getStringList(CommonConstants.PHYSICAL_OPERATOR_SCAN_PACKAGES);
+    return PathScanner.scanForImplementationsArr(RootCreator.class, packages);
+  }
+
+  private Class<?>[] getLogicalOperatorDependencies() {
+    List<String> packages = config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES);
+    return PathScanner.scanForImplementationsArr(LogicalOperator.class, packages);
   }
 
 /*
@@ -142,11 +191,13 @@ public class RunDrill {
   }
 */
 
-  private static <T> Iterable<Class<?>> convertTypesToClass(Iterable<Class<? extends T>> types) {
+  private static <T> Iterable<Class<?>> convertTypesToClass(Iterable<Class<? extends T>>... types) {
     List<Class<?>> ret = new LinkedList<>();
 
-    for (Class<?> type : types) {
-      ret.add(type);
+    for (Iterable<Class<? extends T>> typesList : types) {
+      for (Class<?> type : typesList) {
+        ret.add(type);
+      }
     }
 
     return ret;
