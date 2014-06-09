@@ -17,13 +17,9 @@
  */
 package org.apache.drill.yarn.integration;
 
-import java.io.File;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
@@ -32,9 +28,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.twill.api.*;
 import org.apache.twill.api.logging.PrinterLogHandler;
 import org.apache.twill.common.Services;
-import org.apache.twill.ext.BundledJarRunnable;
-import org.apache.twill.ext.BundledJarRunner;
 import org.apache.twill.yarn.YarnTwillRunnerService;
+import parquet.format.converter.ParquetMetadataConverter;
 
 public class RunDrill {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RunDrill.class);
@@ -45,9 +40,7 @@ public class RunDrill {
    */
   private static class DrillbitRunnable extends AbstractTwillRunnable {
     @Override
-    public void run() { // basically Drillbit main-method
-      showContextArgumentsForDebug(super.getContext().getArguments());
-
+    public void run() {
       StartupOptions options = StartupOptions.parse(super.getContext().getArguments());
       DrillConfig config = DrillConfig.create(options.getConfigLocation());
 
@@ -58,18 +51,7 @@ public class RunDrill {
       }
     }
 
-    private void showContextArgumentsForDebug(String[] arguments) {
-      StringBuilder sb = new StringBuilder("Context arguments: ");
-
-      for (String arg : arguments) {
-        sb.append(arg);
-        sb.append("; ");
-      }
-
-      logger.debug(sb.toString());
-    }
-
-    public static Drillbit start(DrillConfig config) throws DrillbitStartupException {
+    private Drillbit start(DrillConfig config) throws DrillbitStartupException {
       Drillbit bit;
       try {
         logger.debug("Setting up Drillbit.");
@@ -106,6 +88,7 @@ public class RunDrill {
                             .setMemory(2048, ResourceSpecification.SizeUnit.MEGA)
                             .setInstances(1)
                             .build())
+                    .withDependencies(ParquetMetadataConverter.class)
                     .addLogHandler(new PrinterLogHandler(new PrintWriter(System.out, true)))
                     .start();
 
