@@ -26,16 +26,46 @@ import org.apache.twill.api.AbstractTwillRunnable;
 public class DrillbitRunnable extends AbstractTwillRunnable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitRunnable.class);
 
+  private volatile Drillbit drillbit = null;
+
   @Override
   public void run() {
+    drillbit = initAndStart();
+
+    while (drillbit != null) {
+      try {
+        synchronized (this) {
+          Thread.sleep(10000);
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  @Override
+  public synchronized void stop() {
+    if (drillbit != null) {
+      drillbit.close();
+      drillbit = null;
+    }
+  }
+
+  @Override
+  public void destroy() {
+    stop();
+  }
+
+  private Drillbit initAndStart() {
     StartupOptions options = StartupOptions.parse(super.getContext().getArguments());
     DrillConfig config = DrillConfig.create(options.getConfigLocation());
 
     try {
-      this.start(config);
+      return this.start(config);
     } catch (DrillbitStartupException e) {
       logger.error("Error starting Drillbit.", e);
     }
+    return null;
   }
 
   private Drillbit start(DrillConfig config) throws DrillbitStartupException {
