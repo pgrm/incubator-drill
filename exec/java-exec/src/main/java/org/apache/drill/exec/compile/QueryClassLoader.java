@@ -32,12 +32,28 @@ public class QueryClassLoader extends URLClassLoader {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryClassLoader.class);
 
+  private static ClassLoader defaultClassLoader;
+
   private final ClassCompiler classCompiler;
   private AtomicLong index = new AtomicLong(0);
   private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
+  public static void setDefaultClassLoader(ClassLoader parent) { defaultClassLoader = parent; }
+  public static void unsetDefaultClassLoader() { defaultClassLoader = null; }
+
   public QueryClassLoader(boolean useJanino) {
-    super(new URL[0]);
+    this(useJanino, getParentClassLoader());
+  }
+
+  private static ClassLoader getParentClassLoader() {
+    if (defaultClassLoader == null)
+      return getSystemClassLoader();
+    else
+      return defaultClassLoader;
+  }
+
+  public QueryClassLoader(boolean useJanino, ClassLoader parent) {
+    super(new URL[0], parent);
     if (useJanino) {
       this.classCompiler = new JaninoClassCompiler(this);
     } else {

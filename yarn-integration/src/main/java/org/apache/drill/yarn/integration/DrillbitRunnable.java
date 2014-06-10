@@ -18,6 +18,7 @@
 package org.apache.drill.yarn.integration;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.StartupOptions;
@@ -30,6 +31,8 @@ public class DrillbitRunnable extends AbstractTwillRunnable {
 
   @Override
   public void run() {
+    QueryClassLoader.setDefaultClassLoader(Thread.currentThread().getContextClassLoader());
+
     drillbit = initAndStart();
 
     while (drillbit != null) {
