@@ -18,12 +18,14 @@
 package org.apache.drill.yarn.integration;
 
 import java.io.PrintWriter;
+import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -57,7 +59,7 @@ public class RunDrill {
   private String zkConnection;
   private DrillConfig config;
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws URISyntaxException {
     final RunDrill starter = new RunDrill();
 
     if (args.length < 1) {
@@ -97,7 +99,7 @@ public class RunDrill {
     twillRunner.startAndWait();
   }
 
-  private void initializeAndStartTwillController() {
+  private void initializeAndStartTwillController() throws URISyntaxException {
     controller = twillRunner.prepare(new DrillbitRunnable(), getResourceSpecifications())
             .withDependencies(getStoragePluginDependencies())
             .withDependencies(getStoragePluginConfigDependencies())
@@ -112,6 +114,7 @@ public class RunDrill {
                     SchemaChangeException.class,
                     FragmentContext.class,
                     RecordBatch.class)
+            .withResources(Resources.class.getClassLoader().getResource("storage-plugins.json").toURI())
             .addLogHandler(new PrinterLogHandler(new PrintWriter(System.out, true)))
             .start();
 
